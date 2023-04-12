@@ -5,6 +5,38 @@ import os
 import logging
 import atexit
 import argparse
+from token import Token, TokenType
+from log_config import setup_logger
+from error_management import error, report, had_error
+
+
+def run(source):
+    scanner = Scanner(source)
+    tokens = scanner.scan_tokens()
+    # For now, just print the tokens.
+    for token in tokens:
+        print(token)
+# -----------------------------------------------------------------------------
+
+
+def run_file(filename):
+    with open(filename, 'rb') as file:
+        bytes = file.read()
+        run(bytes.decode())
+    pass
+# -----------------------------------------------------------------------------
+
+
+def run_prompt():
+    while True:
+        try:
+            line = input("> ")
+            if not line:
+                break
+            run(line)
+        except EOFError:
+            break
+# -----------------------------------------------------------------------------
 
 
 # Main function. This function serves as the starting point for program execution.
@@ -13,10 +45,12 @@ def main(command_line_arguments) -> int:
 
     if command_line_arguments.script:
         print(f"Executing Lox script \"{command_line_arguments.script}\"")
+        run_file(command_line_arguments.script)
     else:
         print("Entering Lox interpreter mode!")
+        run_prompt()
 
-    return EXIT_SUCCESS
+    return EXIT_SUCCESS if not had_error else EXIT_FAILURE
 # -----------------------------------------------------------------------------
 
 
@@ -29,38 +63,11 @@ if __name__ == "__main__":
     global EXIT_FAILURE
     EXIT_FAILURE = 1
     global MODULE_NAME
-    MODULE_NAME = os.path.splitext(os.path.basename(__file__))[0]
-    global LOG_PATH
-    LOG_PATH = "./logs"
-    global LOG_FILE
-    LOG_FILE = MODULE_NAME + ".log"
 
     # Function called when module exits. This can be used to clean up if necessary.
     def module_cleanup():
         logger.debug("Module \"{}\" exiting, Goodbye!".format(MODULE_NAME))
         logging.shutdown()  # Flush the log and close out the file
-    # -------------------------------------------------------------------------
-
-    # Should be the first thing called. it sets up the root logger
-    # returns the module logger instance
-    def setup_logger(log_level, log_path=LOG_PATH, log_file=LOG_FILE, remove_preexisting=False):
-        if remove_preexisting:
-            # Remove all prexisting handlers associated with the root logger object.
-            for handler in logging.root.handlers[:]:
-                logging.root.removeHandler(handler)
-        if not os.path.exists(LOG_PATH):
-            os.makedirs(LOG_PATH, exist_ok=True)
-        logging.basicConfig(
-            level=log_level,
-            format="%(asctime)s {:<20s} [%(levelname)-5s] %(message)s".format(MODULE_NAME),
-            handlers=[
-                logging.FileHandler("{}/{}".format(log_path, log_file), mode="w", delay=True),
-                logging.StreamHandler(sys.stdout)
-            ]
-        )
-        lgr = logging.getLogger(__name__)
-        lgr.setLevel(log_level)
-        return lgr
     # -------------------------------------------------------------------------
 
     cla_parser = argparse.ArgumentParser()
