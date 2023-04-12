@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PyLox Code Converter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+        }
+        textarea {
+            width: 100%;
+            height: 150px;
+            resize: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>PyLox Code Converter</h1>
+        <p>Paste Java code from Crafting Interpreters:</p>
+        <textarea id="context" placeholder="Enter context (optional)"></textarea>
+        <br>
+        <textarea id="javaCode" placeholder="Paste Java code here..."></textarea>
+        <br>
+        <button id="convertButton">Convert to Python</button>
+        <br>
+        <h2>Python Code:</h2>
+        <textarea id="pythonCode" readonly></textarea>
+    </div>
+
+       <script>
+        const apiUrl = "http://127.0.0.1:5000/convert";
+
+        function convertCode() {
+            const javaCode = document.getElementById("javaCode").value;
+            const context = document.getElementById("context").value;
+
+            // Include the context in the prompt
+            const prompt = `Context:\n${context}\n\nConvert this Java code to Python:\n\n${javaCode}`;
+
+            fetch(apiUrl, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ prompt: prompt }) // Send the prompt with context
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("pythonCode").innerHTML = data.pythonCode;
+            })
+            .catch(error => {
+                console.error("Error:", error);
+            });
+        }
+    </script>
+</body>
+</html>
