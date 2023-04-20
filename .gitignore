@@ -129,3 +129,4 @@ dmypy.json
 .pyre/
 src/logs
 personal_data.py
+.idea/
